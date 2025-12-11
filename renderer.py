@@ -30,7 +30,8 @@ def render(cameraPlane, objects):
         for connection in object.connections:
             vec_1_2d = toTwoDim(cameraPlane, object.components[connection[0]])
             vec_2_2d = toTwoDim(cameraPlane, object.components[connection[1]])
-            pg.draw.line(screen, WHITE, vec_1_2d, vec_2_2d)
+            col = int(np.clip(math.floor(vectorNorm(object.center, 3)), 0, 255))
+            pg.draw.line(screen, (col, col, col), vec_1_2d, vec_2_2d)
     pg.display.update()
 
 def toTwoDim(vecs: vecs.VectorSpace, vec: pg.Vector3, scale = 10):
@@ -104,7 +105,8 @@ clock = pg.time.Clock()
 #i = 0
 spanVec1 = pg.Vector3(1, 0, 0)
 spanVec2 = pg.Vector3(0, 1, 0)
-
+dVector = pg.Vector3(0, 0, 0)
+globalScale = 1
 heldKeys = []
 
 def checkRotations(heldKeys, angle):
@@ -123,6 +125,25 @@ def checkRotations(heldKeys, angle):
             spanVec1 = ThreeDRotation(angle, spanVec1, "x")
             spanVec2 = ThreeDRotation(angle, spanVec2, "x")
 
+def checkTranslations(heldKeys, speed):
+    global dVector, globalScale
+    for key in heldKeys:
+        if(key == pg.K_w):
+            dVector.z += speed
+            globalScale += 0.01
+        elif(key == pg.K_s):
+            dVector.z -= speed
+            globalScale -= 0.01
+        elif(key == pg.K_d):
+            dVector.x -= speed
+        elif(key == pg.K_a):
+            dVector.x += speed
+        elif(key == pg.K_SPACE):
+            dVector.y -= speed
+        elif(key == pg.K_LSHIFT):
+            dVector.y += speed
+    return dVector
+
 while running:
     for event in pg.event.get():
         if event.type == pg.QUIT:
@@ -134,15 +155,22 @@ while running:
             key = event.key
             if(key in heldKeys):
                 heldKeys.remove(key)
-    checkRotations(heldKeys, 0.05)
+    checkRotations(heldKeys, 0.025)
+    checkTranslations(heldKeys, 1)
     #angle = i * 0.01
     #spanVec1 = ThreeDRotation(angle, ThreeDRotation(angle, pg.Vector3(1, 0, 0), "x"), "y")
     #spanVec2 = ThreeDRotation(angle,ThreeDRotation(angle, pg.Vector3(0, 1, 0), "x"), "y")
     twoDPlane = vecs.VectorSpace([spanVec1, spanVec2])
     
-    square = obj.Object.getRectangle(10, 20, 25)
-    
-    render(twoDPlane, [obj.Object(pg.Vector3(0, 0, 0), square[0], square[1])])
+    square = obj.Object.getSquare(globalScale)
+    objects = []
+
+    reps = 20
+    for i in range(reps):
+        for j in range(reps):
+            objects.append(obj.Object(pg.Vector3(i*globalScale, j*globalScale, i*j) + dVector, square[0], square[1]))
+    #objects.append(obj.Object(pg.Vector3(-30, 20, 0), [pg.Vector3(0, 0, 0), pg.Vector3(0, 5, 0), pg.Vector3(5, 0, 0), pg.Vector3(0, 0, 5)], [[0, 1], [0, 2], [0, 3]], color=RED))
+    render(twoDPlane, objects)
     clock.tick(60)
     #i = i+1
 pg.quit()
