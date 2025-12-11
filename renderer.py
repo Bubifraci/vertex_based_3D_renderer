@@ -101,19 +101,48 @@ def ThreeDRotation(angle, vector, fixed):
 init()
 running = True
 clock = pg.time.Clock()
-i = 0
+#i = 0
+spanVec1 = pg.Vector3(1, 0, 0)
+spanVec2 = pg.Vector3(0, 1, 0)
+
+heldKeys = []
+
+def checkRotations(heldKeys, angle):
+    global spanVec1, spanVec2
+    for key in heldKeys:
+        if(key == pg.K_LEFT):
+            spanVec1 = ThreeDRotation(angle, spanVec1, "y")
+            spanVec2 = ThreeDRotation(angle, spanVec2, "y")
+        elif(key == pg.K_RIGHT):
+            spanVec1 = ThreeDRotation(-angle, spanVec1, "y")
+            spanVec2 = ThreeDRotation(-angle, spanVec2, "y")
+        elif(key == pg.K_UP):
+            spanVec1 = ThreeDRotation(-angle, spanVec1, "x")
+            spanVec2 = ThreeDRotation(-angle, spanVec2, "x")
+        elif(key == pg.K_DOWN):
+            spanVec1 = ThreeDRotation(angle, spanVec1, "x")
+            spanVec2 = ThreeDRotation(angle, spanVec2, "x")
+
 while running:
     for event in pg.event.get():
         if event.type == pg.QUIT:
             running = False
-    angle = i * 0.01
-    spanVec1 = ThreeDRotation(angle, ThreeDRotation(angle, pg.Vector3(1, 0, 0), "x"), "y")
-    spanVec2 = ThreeDRotation(angle,ThreeDRotation(angle, pg.Vector3(0, 1, 0), "x"), "y")
+        if event.type == pg.KEYDOWN:
+            key = event.key
+            heldKeys.append(key)
+        if event.type == pg.KEYUP:
+            key = event.key
+            if(key in heldKeys):
+                heldKeys.remove(key)
+    checkRotations(heldKeys, 0.05)
+    #angle = i * 0.01
+    #spanVec1 = ThreeDRotation(angle, ThreeDRotation(angle, pg.Vector3(1, 0, 0), "x"), "y")
+    #spanVec2 = ThreeDRotation(angle,ThreeDRotation(angle, pg.Vector3(0, 1, 0), "x"), "y")
     twoDPlane = vecs.VectorSpace([spanVec1, spanVec2])
     
     square = obj.Object.getRectangle(10, 20, 25)
     
     render(twoDPlane, [obj.Object(pg.Vector3(0, 0, 0), square[0], square[1])])
     clock.tick(60)
-    i = i+1
+    #i = i+1
 pg.quit()
